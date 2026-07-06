@@ -1,38 +1,38 @@
-version: '3.8'
-
 services:
   openclaw-gateway:
     image: ghcr.io/openclaw/openclaw:latest
     container_name: openclaw-gateway
+
     restart: unless-stopped
-    # 1. Drop root privileges immediately
-    user: "1000:1000"
-    # 2. Prevent port mapping exposure to the public internet
+
     ports:
       - "127.0.0.1:18789:18789"
+
     environment:
-      - NODE_ENV=production
-      # Forces internal gateway binding while host mapping controls access
-      - OPENCLAW_GATEWAY_BIND=lan 
+      HOME: /home/node
+      TERM: xterm-256color
+
+      # Keep all OpenClaw state inside the mounted volume
+      OPENCLAW_HOME: /home/node/.openclaw
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+
+      NODE_ENV: production
+
     volumes:
-      # 3. Mount isolated persistence paths
-      - ./config:/home/node/.openclaw/config:rw
-      - ./workspace:/home/node/.openclaw/workspace:rw
-      # Required for headless browser features if using tool skills
-      - type: tmpfs
-        target: /dev/shm
-        tmpfs:
-          size: 2000000000 # 2GB Shared Memory allocation
-    # 4. Strict kernel and runtime isolation
-    read_only: true
+      # OpenClaw configuration and state
+      - ./config:/home/node/.openclaw
+
+      # Workspace for projects/files
+      - ./workspace:/home/node/.openclaw/workspace
+
+    tmpfs:
+      - /dev/shm:size=2g
+
     security_opt:
       - no-new-privileges:true
+
     cap_drop:
       - ALL
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4G
-        reservations:
-          memory: 1G
