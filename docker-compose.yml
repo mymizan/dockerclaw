@@ -1,0 +1,42 @@
+services:
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: openclaw
+
+    restart: unless-stopped
+
+    # Only accessible from your Mac
+    ports:
+      - "127.0.0.1:18789:18789"
+
+    # Don't run as root
+    user: "1000:1000"
+
+    # Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Drop every Linux capability
+    cap_drop:
+      - ALL
+
+    # Make the container filesystem read-only
+    read_only: true
+
+    # Writable temp directory
+    tmpfs:
+      - /tmp
+
+    volumes:
+      - ./config:/home/node/.openclaw
+      - ./workspace:/home/node/.openclaw/workspace
+
+    environment:
+      NODE_ENV: production
+
+    # Never mount these!
+    # - ~/.ssh
+    # - ~/Documents
+    # - ~/Desktop
+    # - ~/Downloads
+    # - /var/run/docker.sock
